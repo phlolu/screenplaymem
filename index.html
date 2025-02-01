@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russell Acting Screenplay Memorizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        textarea { width: 100%; height: 150px; resize: vertical; }ß
+        .word { cursor: pointer; border-bottom: 2px solid black; padding: 2px; }
+        .paragraph { display: block; margin-bottom: 10px; }
+        .locked { font-weight: bold; }
+        .button-container { position: absolute; top: 10px; right: 10px; }
+        .button-container button { margin-left: 10px; padding: 5px 10px; cursor: pointer; }
+        .button-container button.active { background-color: #007BFF; color: white; border: none; }
+        .toggle-section { margin-top: 20px; }
+        .advanced-container, .basic-container { display: none; margin-top: 20px; }
+        .advanced-container.active, .basic-container.active { display: block; }
+        .line-input { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .line-input input[type="text"].character { width: 25%; }
+        .line-input input[type="text"].dialogue { flex: 1; height: 3em; resize: vertical; word-wrap: break-word; }
+        .line-input button { padding: 5px 10px; border: 1px solid #ccc; background-color: white; cursor: pointer; }
+        .line-input button.active { background-color: #007BFF; color: white; box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2); }
+        .output-container { margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .character-name { font-weight: bold; margin-bottom: 5px; }
+        .hidden { display: none; }
+        .toggle-button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="button-container">
+        <button id="basicButton" class="active" onclick="switchMode('basic')">Basic</button>
+        <button id="advancedButton" onclick="switchMode('advanced')">Advanced</button>
+    </div>
+
+    <h2>Russell Acting Screenplay Memorizer</h2>
+
+    <div class="basic-container active" id="basicContainer">
+        <div id="basicInputSection">
+            <textarea id="scriptInput" placeholder="Paste your script here..."></textarea>
+            <br><br>
+            <label>Blanking Percentage: <input type="range" id="basicBlankingSlider" min="0" max="100" value="30"> <span id="basicBlankingPercent">30%</span></label>
+            <br>
+            <button onclick="processText()">Process Text</button>
+            <button onclick="resetApp()">Reset</button>
+        </div>
+        <button id="showBasicInput" class="toggle-button hidden" onclick="toggleBasicInput(true)">Show Inputs</button>
+        <div id="output"></div>
+    </div>
+
+    <div class="advanced-container" id="advancedContainer">
+        <div id="advancedInputSection">
+            <h3>Advanced Mode</h3>
+            <label>Blanking Percentage: <input type="range" id="advancedBlankingSlider" min="0" max="100" value="30"> <span id="advancedBlankingPercent">30%</span></label>
+            <div id="lineInputs"></div>
+            <button onclick="addLine()">Add Line</button>
+            <button onclick="generateAdvancedOutput()">Generate Output</button>
+        </div>
+        <button id="showAdvancedInput" class="toggle-button hidden" onclick="toggleAdvancedInput(true)">Show Inputs</button>
+        <div id="advancedOutput"></div>
+    </div>
+
+    <script>
+        // Mode Switching
+        function switchMode(mode) {
+            const basicContainer = document.getElementById("basicContainer");
+            const advancedContainer = document.getElementById("advancedContainer");
+            const basicButton = document.getElementById("basicButton");
+            const advancedButton = document.getElementById("advancedButton");
+
+            if (mode === "basic") {
+                basicContainer.classList.add("active");
+                advancedContainer.classList.remove("active");
+                basicButton.classList.add("active");
+                advancedButton.classList.remove("active");
+            } else {
+                advancedContainer.classList.add("active");
+                basicContainer.classList.remove("active");
+                advancedButton.classList.add("active");
+                basicButton.classList.remove("active");
+            }
+        }
+
+        // Basic Mode Functions
+        function processText() {
+            let text = document.getElementById("scriptInput").value;
+            let paragraphs = text.split("\n").filter(p => p.trim() !== "");
+            let blankingPercent = document.getElementById("basicBlankingSlider").value;
+            document.getElementById("basicBlankingPercent").textContent = blankingPercent + "%";
+
+            let outputHTML = paragraphs.map(paragraph => {
+                let words = paragraph.match(/\[.*?\]|\S+/g);
+                if (!words) return "";
+
+                let numToBlank = Math.floor(words.length * (blankingPercent / 100));
+
+                let indices = words.map((word, i) => ({ word, index: i }))
+                                   .filter(item => !item.word.match(/^\[.*?\]$/))
+                                   .map(item => item.index);
+
+                indices.sort(() => Math.random() - 0.5);
+                let blankIndices = indices.slice(0, numToBlank);
+
+                blankIndices.forEach(i => {
+                    words[i] = `<span class='word' onclick='revealWord(this)' data-word='${words[i]}' aria-label='blank' role='button'>_____</span>`;
+                });
+
+                return `<p class='paragraph'>${words.join(" ")}</p>`;
+            }).join("");
+
+            document.getElementById("output").innerHTML = outputHTML;
+            toggleBasicInput(false);
+        }
+
+        function revealWord(element) {
+            element.textContent = element.getAttribute("data-word");
+            element.style.borderBottom = "none";
+            element.style.cursor = "default";
+        }
+
+        document.getElementById("basicBlankingSlider").addEventListener("input", function() {
+            document.getElementById("basicBlankingPercent").textContent = this.value + "%";
+        });
+
+        function resetApp() {
+            document.getElementById("scriptInput").value = "";
+            document.getElementById("output").innerHTML = "";
+            document.getElementById("basicBlankingSlider").value = 30;
+            document.getElementById("basicBlankingPercent").textContent = "30%";
+            toggleBasicInput(true);
+        }
+
+        function toggleBasicInput(show) {
+            const inputSection = document.getElementById("basicInputSection");
+            const toggleButton = document.getElementById("showBasicInput");
+            if (show) {
+                inputSection.classList.remove("hidden");
+                toggleButton.classList.add("hidden");
+            } else {
+                inputSection.classList.add("hidden");
+                toggleButton.classList.remove("hidden");
+            }
+        }
+
+        // Advanced Mode Functions
+        function addLine() {
+            const lineInputs = document.getElementById("lineInputs");
+            if (lineInputs.children.length >= 250) {
+                alert("Maximum number of lines reached.");
+                return;
+            }
+
+            const div = document.createElement("div");
+            div.className = "line-input";
+
+            div.innerHTML = `
+                <input type="text" placeholder="Character" class="character" />
+                <button class="locked" onclick="toggleButton(this)">Locked</button>
+                <button class="show-name active" onclick="toggleButton(this)">Show Name</button>
+                <input type="text" placeholder="Dialogue" class="dialogue" />
+            `;
+
+            lineInputs.appendChild(div);
+        }
+
+        function toggleButton(button) {
+            button.classList.toggle("active");
+        }
+
+        function generateAdvancedOutput() {
+            const lineInputs = document.querySelectorAll(".line-input");
+            const blankingPercent = document.getElementById("advancedBlankingSlider").value;
+            const advancedOutput = document.getElementById("advancedOutput");
+
+            let outputHTML = "";
+
+            lineInputs.forEach(input => {
+                const character = input.querySelector(".character").value;
+                const locked = input.querySelector(".locked").classList.contains("active");
+                const showName = input.querySelector(".show-name").classList.contains("active");
+                const dialogue = input.querySelector(".dialogue").value;
+
+                let processedDialogue = dialogue;
+
+                if (!locked) {
+                    const words = dialogue.match(/\S+/g) || [];
+                    const numToBlank = Math.floor(words.length * (blankingPercent / 100));
+
+                    let indices = [...Array(words.length).keys()];
+                    indices.sort(() => Math.random() - 0.5);
+                    const blankIndices = indices.slice(0, numToBlank);
+
+                    blankIndices.forEach(i => {
+                        words[i] = `<span class='word' onclick='revealWord(this)' data-word='${words[i]}'>_____</span>`;
+                    });
+
+                    processedDialogue = words.join(" ");
+                }
+
+                outputHTML += `
+                    <div class="output-container">
+                        ${showName ? `<div class="character-name">${character}</div>` : ""}
+                        <div>${processedDialogue}</div>
+                    </div>
+                `;
+            });
+
+            advancedOutput.innerHTML = outputHTML;
+            toggleAdvancedInput(false);
+        }
+
+        function toggleAdvancedInput(show) {
+            const inputSection = document.getElementById("advancedInputSection");
+            const toggleButton = document.getElementById("showAdvancedInput");
+            if (show) {
+                inputSection.classList.remove("hidden");
+                toggleButton.classList.add("hidden");
+            } else {
+                inputSection.classList.add("hidden");
+                toggleButton.classList.remove("hidden");
+            }
+        }
+    </script>
+</body>
+</html>
