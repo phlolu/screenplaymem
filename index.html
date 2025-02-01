@@ -167,6 +167,10 @@
             button.classList.toggle("active");
         }
 
+        document.getElementById("advancedBlankingSlider").addEventListener("input", function() {
+            document.getElementById("advancedBlankingPercent").textContent = this.value + "%";
+        });        
+
         function generateAdvancedOutput() {
             const lineInputs = document.querySelectorAll(".line-input");
             const blankingPercent = document.getElementById("advancedBlankingSlider").value;
