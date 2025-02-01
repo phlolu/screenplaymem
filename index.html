@@ -37,13 +37,13 @@
 
     <div class="basic-container active" id="basicContainer">
         <div id="basicInputSection">
-            <textarea id="scriptInput" placeholder="Paste your script here..."></textarea>
-            <br><br>
-            <label>Blanking Percentage: <input type="range" id="basicBlankingSlider" min="0" max="100" value="30"> <span id="basicBlankingPercent">30%</span></label>
-            <br>
-            <button onclick="processText()">Process Text</button>
             <button onclick="resetApp()">Reset</button>
+                <textarea id="scriptInput" placeholder="Paste your script here..."></textarea>
+                <br><br>
         </div>
+        <button onclick="processText()">Process Text</button>        
+        <label>Blanking Percentage: <input type="range" id="basicBlankingSlider" min="0" max="100" value="30"> <span id="basicBlankingPercent">30%</span></label>
+        <br>                
         <button id="showBasicInput" class="toggle-button hidden" onclick="toggleBasicInput(true)">Show Inputs</button>
         <div id="output"></div>
     </div>
@@ -51,11 +51,11 @@
     <div class="advanced-container" id="advancedContainer">
         <div id="advancedInputSection">
             <h3>Advanced Mode</h3>
-            <label>Blanking Percentage: <input type="range" id="advancedBlankingSlider" min="0" max="100" value="30"> <span id="advancedBlankingPercent">30%</span></label>
             <div id="lineInputs"></div>
-            <button onclick="addLine()">Add Line</button>
-            <button onclick="generateAdvancedOutput()">Generate Output</button>
+            <button onclick="addLine()">Add Line</button>            
         </div>
+        <label>Blanking Percentage: <input type="range" id="advancedBlankingSlider" min="0" max="100" value="30"> <span id="advancedBlankingPercent">30%</span></label>
+            <button onclick="generateAdvancedOutput()">Generate Output</button>
         <button id="showAdvancedInput" class="toggle-button hidden" onclick="toggleAdvancedInput(true)">Show Inputs</button>
         <div id="advancedOutput"></div>
     </div>
